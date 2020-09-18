@@ -1,26 +1,75 @@
-import React from 'react';
-import logo from './logo.svg';
+import { time } from 'console';
+import React, { ChangeEvent, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import './App.css';
+import { Dispatch } from 'redux';
+import { ThunkDispatch } from 'redux-thunk';
+import { connect, MapDispatchToProps, MapStateToProps } from 'react-redux';
+import {
+  saveUsername as saveUsernameAction,
+  saveUserMessage as saveUserMessageAction,
+} from './store/user/UserActions';
+import { IUser } from './store/user/UserTypes';
 
-function App() {
+interface IAppOwnProps {
+  username: string | undefined;
+  userType: 'admin' | 'moderator' | 'user' | 'guest';
+}
+
+interface IAppDispatchToProps {
+  saveUsername: (user: IUser) => void;
+  saveUserMessage: (user: IUser) => void;
+}
+
+const App: React.FC<IAppOwnProps> = ({ userType, username }): JSX.Element => {
+  const [time, setTime] = useState<Date>(() => new Date(Date.now()));
+  const [message, setMessage] = useState<string>('');
+
+  const handleTextChange = (event: ChangeEvent<HTMLInputElement>): void => {
+    setMessage(event.target.value);
+  };
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTime(new Date(Date.now()))
+    }, 1000);
+
+    return () => {
+      clearInterval(timer);
+    }
+  }, [username]);
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <p>
+        Hi, {username ? username : 'Mysterious Entity'}, your user type is {username ? userType : 'irrelevant because I do not know you'}
+      </p>
+      <p>
+        {time.toUTCString()}
+      </p>
+      <input
+        type='text'
+        placeholder='Enter your message here'
+        value={message}
+        onChange={handleTextChange} />
+      <p>
+        Your message: {message || ''}
+      </p>
+      <Link to='/userlist'>User List</Link>
     </div>
   );
 }
+
+const mapDispatchToProps: MapDispatchToProps<
+  IAppDispatchToProps,
+  IAppOwnProps> = (dispatch: Dispatch, ownProps: IAppOwnProps): IAppDispatchToProps => ({
+    saveUsername: (user: IUser) => {
+      dispatch(saveUsernameAction(user));
+    },
+
+    saveUserMessage: (user: IUser) => {
+      dispatch(saveUserMessageAction(user));
+    }
+  });
 
 export default App;
